@@ -2,8 +2,14 @@
     "python.analysis.extraPaths": [
         "/Users/hanson-nordstokke/.vscode/extensions/joedevivo.vscode-circuitpython-0.1.20-darwin-x64/boards/0x0000303A/0x00320002",
         "/Users/hanson-nordstokke/.vscode/extensions/joedevivo.vscode-circuitpython-0.1.20-darwin-x64/stubs",
-        "/Users/hanson-nordstokke/Library/Application Support/Code/User/globalStorage/joedevivo.vscode-circuitpython/bundle/20230324/adafruit-circuitpython-bundle-py-20230324/lib"
+        "/Users/hanson-nordstokke/Library/Application Support/Code/User/globalStorage/joedevivo.vscode-circuitpython/bundle/20230330/adafruit-circuitpython-bundle-py-20230330/lib"
     ],
     "circuitpython.board.vid": "0x0000303A",
-    "circuitpython.board.pid": "0x00320002"
+    "circuitpython.board.pid": "0x00320002",
+    "python.languageServer": "Pylance",
+    "python.linting.pylintEnabled": false,
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingModuleSource": "none"
+    },
+    "circuitpython.board.version": null
 }
