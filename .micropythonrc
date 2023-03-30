@@ -10,12 +10,19 @@
   "ignore": {
     "extensions": [
       ".micropythonrc",
-      ".pyc"
+      ".pyc",
+      ".md",
+      ".gitignore",
+      ".git",
+      "prøv.py", 
+      ".DS_Store"
     ],
     "directories": [
       ".vscode",
       "__pycache__",
-      "mi_machine"
+      ".git",
+      "/.git",
+      ".DS_Store"
     ]
   },
   "tools": {

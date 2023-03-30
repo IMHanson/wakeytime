@@ -3,10 +3,7 @@ import mu_time
 from firebase_realtime import Realtime
 import env_vars
 import eyes
-
-headers = ''
-with open('validate.txt', 'r') as validate:
-    headers = validate.read()
+from boot import headers
 
 realtime_db = Realtime(env_vars.FIREBASE_URL, headers)
 

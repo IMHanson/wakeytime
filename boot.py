@@ -27,6 +27,4 @@ ntptime.settime()
 #####   Initialize Firebase #####
 
 auth = Auth()
-flg, headers = auth.validate_user(env_vars.EMAIL, env_vars.PASSWORD, env_vars.API_KEY)
-with open('validate.txt', 'w') as validate:
-    validate.write(headers)
+flg, headers = auth.validate_user(env_vars.EMAIL, env_vars.EMAIL_PASSSWORD, env_vars.API_KEY)

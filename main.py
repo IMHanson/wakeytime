@@ -1,9 +1,7 @@
 # This is your main script.
 import time
 import socket
-import select
 from machine import Pin
-import eyes
 import nattlys
 
 button = Pin(19, Pin.IN, Pin.PULL_UP)
@@ -39,9 +37,6 @@ def handle_requests():
 server_socket = socket.socket()
 server_socket.bind(('', 80))
 server_socket.listen(5)
-
-select_obj = select.poll()
-select_obj.register(server_socket, select.POLLIN)
 
 #####   Main Loop   #####
 
