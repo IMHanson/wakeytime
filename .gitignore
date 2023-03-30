@@ -111,6 +111,7 @@ env.bak/
 venv.bak/
 env_vars.py
 prøv.py
+*.vscode
 
 # Spyder project settings
 .spyderproject
