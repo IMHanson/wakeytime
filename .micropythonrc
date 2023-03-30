@@ -1,0 +1,25 @@
+{
+  "upload": {
+    "port": "/dev/cu.usbserial-0001",
+    "baud": 115200
+  },
+  "serial": {
+    "port": "/dev/cu.usbserial-0001",
+    "baud": 115200
+  },
+  "ignore": {
+    "extensions": [
+      ".micropythonrc",
+      ".pyc"
+    ],
+    "directories": [
+      ".vscode",
+      "__pycache__",
+      "mi_machine"
+    ]
+  },
+  "tools": {
+    "ampy": "/Library/Frameworks/Python.framework/Versions/3.11/bin/ampy",
+    "rshell": "/Library/Frameworks/Python.framework/Versions/3.11/bin/rshell"
+  }
+}

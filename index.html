@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="no">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/lib/styles.css">
+    <!-- <script src="./script.js"></script> -->
+    <title>Wakey-Time Nattlys</title>
+</head>
+
+<body class="light-mode">
+    <!-- Welcome -->
+    <div class="welcome-container">
+        <h1>Velkommen til Wakey-Time Nattlys</h1>
+        <h2>Nå er det <span id="wakeyTimeStatus">{{ wakeyTimeStatus }}</span></h2>
+        <h3 id="statusMessage">{{ statusMessage }}</h3>
+    </div>
+
+    <!-- Settings -->
+    <div class="settings-container">
+        <h1>Innstillinger</h1>
+
+        <!-- Clock Settings -->
+        <div class="klokke">
+
+            <!-- Wakey-Time -->
+            <div class="wakey">
+                <h2>Wakey-Time er stilt til: <span id="wakeyTimeDisplay">{{ wakeyTime }}</span></h2>
+
+                <!-- Wakey-Time Input -->
+                <div class="wake-input">
+                    <form>
+                        <input type="time" id=" wakeyTime" name="wakeyTime" value="06:30" required>
+                        <br><br>
+                        <button type="submit" id="wakey-btn" onclick="change_wakeyTime()">Endre Wakey-Time</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sleepy-Time -->
+            <div class="sleepy">
+                <h2>Sleepy-Time er stilt til: <span id="sleepyTimeDisplay">{{ sleepyTime }}</span></h2>
+
+                <!-- Sleepy-Time Input -->
+                <div class="sleep-input">
+                    <form>
+                        <input type="time" id="sleepyTime" name="sleepyTime" value="18:30" required>
+                        <button type="submit" id="sleepy-btn" onclick="change_sleepyTime()">Endre Sleepy-Time</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Slumber Mode -->
+            <div id="slumber">
+                <h1>Slumber Mode</h1>
+                <!-- Totoro Body -->
+                <div class="totoro-container">
+                    <div class="wrap">
+                        <input type="checkbox" name="checkbox" id="slumberMode" onchange="toggle_tot()">
+                        <div class="totoro">
+                            <div class="ears">
+                                <div class="ear"></div>
+                                <div class="ear"></div>
+                            </div>
+                            <div class="arm"></div>
+                            <div class="arm"></div>
+                            <div class="foot"></div>
+                            <div class="foot two"></div>
+                            <div class="kropp">
+                                <div class="spots">
+                                    <div class="spot"></div>
+                                    <div class="spot"></div>
+                                    <div class="spot"></div>
+                                    <div class="spot"></div>
+                                    <div class="spot"></div>
+                                    <div class="spot"></div>
+                                    <div class="spot"></div>
+                                </div>
+                                <div class="inner">
+                                    <div class="mouth"></div>
+                                    <div class="eye"></div>
+                                    <div class="eye"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Dance Party -->
+            <div id="dance">
+                <button type="button" onclick="dance()">Dance</button>
+            </div>
+        </div>
+        <div class="toggle-container">
+            <input type="checkbox" id="toggle" class="toggle" />
+            <label for="toggle" class="toggle-label"></label>
+          </div>
+          
+        <script>
+            function toggleColorMode() {
+                var bg = document.body;
+            if (count % 2 == 0) {
+                bg.classList.remove('light-mode');
+                bg.classList.add('dark-mode');
+                console.log('this');
+                count++;
+            } else {
+                bg.classList.remove('dark-mode');
+                bg.classList.add('light-mode');
+                console.log('that');
+                count++;
+            }
+                console.log('hello');
+                console.log(count);
+            }
+            let count = 0;
+            // Add event listener to toggle switch or button
+            var toggle = document.querySelector(".toggle");
+            toggle.addEventListener("change", toggleColorMode);
+
+            
+        </script>
+</body>
+
+</html>
