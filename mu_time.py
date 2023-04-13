@@ -1,6 +1,5 @@
-import utime as time
+import time
 
-year, month, day, hour, minute, second, weekday, yearday = time.gmtime()
 month_lengths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 # Daylight Savings Time is calculated by finding the last Sunday of a month in spring and the last Sunday of a month in fall. The exact months vary between countries.
@@ -59,16 +58,19 @@ def find_yearday(year: int, month: int, day: int):
     return sum(month_lengths[:month - 1]) + day
 
 
-def is_summertime(time_tuple: tuple=time.gmtime()):
-    year, month, day, hour, minute, second, weekday, yearday = time_tuple
+def is_summertime():
+    year = time.localtime().tm_year
+    yearday = time.localtime().tm_yday
     summertime_start = find_yearday(year, summertime_month, last_sunday(year, summertime_month))
     winter_time_start = find_yearday(year, wintertime_month, last_sunday(year, wintertime_month))
     return summertime_start <= yearday and yearday < winter_time_start
 
+
 def now():
-    year, month, day, hour, minute, second, weekday, yearday = time.gmtime()
+    hour = time.localtime().tm_hour
+    minute = time.localtime().tm_min
     hour += timezone_offset
-    if is_summertime(time.gmtime()):
+    if is_summertime():
         hour += 1
 
     shr = f'{hour}'
