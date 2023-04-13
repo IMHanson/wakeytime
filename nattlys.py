@@ -1,118 +1,161 @@
+import json
+import os
+import ssl
 import time
-import mu_time
-from firebase_realtime import Realtime
-import env_vars
+import adafruit_requests as requests
+import wifi
+from socketpool import SocketPool
 import eyes
-from boot import headers
+import mu_time
 
-realtime_db = Realtime(env_vars.FIREBASE_URL, headers)
+EMAIL = os.getenv('EMAIL')
+PASSWORD = os.getenv('EMAIL_PASSWORD')
+AUTH_URL = os.getenv('URL')
+BASE_URL = os.getenv('FIREBASE_URL')
 
-#####   Time Info   #####
+pool = SocketPool(wifi.radio)
+context = ssl.create_default_context()
+http = requests.Session(pool, context)
 
-# Defaults incase of network trouble
-time_settings = {'wakey-time': '06:30',
-                 'sleepy-time': '18:30',
-                 'slumber-mode': False}
+nattlys = {'wakey-time': '06:30',
+           'sleepy-time': '18:30',
+           'slumber-mode': False}
+idToken = ''
+
+def get_idToken():
+    auth_data = {'email': EMAIL, 'password': PASSWORD,
+                 'returnSecureToken': True}
+    auth_data = json.dumps(auth_data)
+    headers = {'content-type': 'application/json'}
+
+    response = http.post(url=AUTH_URL, headers=headers, data=auth_data)
+
+    if response.status_code == 200:
+        response_data = response.json()
+        header_data = {'content-type': 'application/json; charset=utf-8'}
+
+        for header in ('idToken', 'email', 'refreshToken', 'expiresIn', 'localId'):
+            header_data[header] = str(response_data[header])
+
+        response.close()
+        idToken = header_data['idToken']
+    else:
+        get_idToken()
 
 
-# Check to see if Slumber Mode is engaged
-def get_slumber_mode():
+def format_url(rel_url):
+    return f'{BASE_URL}/{rel_url}/.json?auth={idToken}'
+
+
+#####   Sleepy-Time #####
+
+def get_sleepy_time():
     try:
-        flg, slumber_mode = realtime_db.get('Nattlys/slumber-mode')
-        time_settings['slumber-mode'] = slumber_mode
-    except:
-        slumber_mode = time_settings['slumber-mode']
-    return slumber_mode
+        sleepy_url = format_url('Nattlys/sleepy-time')
+        response = http.get(sleepy_url)
+        sleepy_data = response.json()
+        response.close()
 
-
-# Extends sleepy-time by the slumber length provided (in minutes)
-def sleep_in(slumber_length: int=30):
-    try:
-        sleepy_time = get_sleepytime()
-    except:
-        sleepy_time = time_settings['sleepy-time']
-
-    hour = int(sleepy_time.split(':')[0])
-    minute = int(sleepy_time.split(':')[1])
-    
-    minute += slumber_length
-    while minute >= 60:
-        hour += 1
-        minute %= 60
-
-    hour = f'0{hour}' if hour < 10 else f'{hour}'
-    minute = f'0{minute}' if minute < 10 else f'{minute}'
-    return f'{hour}:{minute}'
-
-
-# Get Wakey-time info from Firebase
-def get_wakeytime():
-    try:
-        flg, w_time_info = realtime_db.get('Nattlys/default-time/wakey-time')
-    
-        hour = w_time_info['HR']
-        minute = w_time_info['MIN']
-    
-        shr = f'0{hour}'  if hour < 10 else f'{hour}'
+        hour = int(sleepy_data['HR'])
+        minute = int(sleepy_data['MIN'])
+        shr = f'0{hour}' if hour < 10 else f'{hour}'
         smin = f'0{minute}' if minute < 10 else f'{minute}'
 
-        wakey_time = f'{shr}:{smin}'
-
-        time_settings['wakey-time'] = wakey_time
-
-    except:
-        wakey_time = time_settings['wakey-time']
-
-    return wakey_time
+        nattlys['sleepy-time'] = f'{shr}:{smin}'
+    except Exception as ex:
+        print(f'{ex}\nUsing default settings')
 
 
-# Changes wakey-time and updates Firebase
-def change_wakey_time(new_time: str):
+def set_sleepy_time(new_time: str):
+    nattlys['sleepy-time'] = new_time
+
     hour = new_time.split(':')[0]
     minute = new_time.split(':')[1]
+    data = {'HR': int(hour), 'MIN': int(minute)}
+    data = json.dumps(data)
 
-    realtime_db.patch('/Nattlys/default-time/wakey-time', ({'HR': hour}, {'MIN': minute}))
+    sleepy_url = format_url('Nattlys/sleepy-time')
+    response = http.patch(url=sleepy_url, data=data)
+    print(response.status_code)
+    response.close()
 
-    time_settings['wakey-time'] = new_time
 
-    print(f'Wakey-time has been updated to {new_time}')
+#####   Slumber-Mode    #####
 
-
-# Get Sleepy-time info from Firebase
-def get_sleepytime():
+def is_slumber_mode():
     try:
-        flg, s_time_info = realtime_db.get('Nattlys/default-time/sleepy-time')
+        slumber_url = format_url('Nattlys/slumber-mode')
+        response = http.get(slumber_url)
+        nattlys['slumber-mode'] = response.json()
+        response.close()
+    except Exception as ex:
+        print(f'{ex}\nUsing default settings')
 
-        hour = s_time_info['HR']
-        minute = s_time_info['MIN']
-
-        # assign the updated value to sleepy_time
-        sleepy_time = f'0{hour}:{minute}' if hour < 10 else f'{hour}:{minute}'
-        time_settings['sleepy-time'] = sleepy_time
-
-    except:
-        sleepy_time = time_settings['sleepy-time']
-
-    return sleepy_time
+    return nattlys['slumber-mode']
 
 
-# Changes sleepy-time and updates Firebase
-def change_sleepy_time(new_time: str):
+def toggle_slumber():
+    nattlys['slumber-mode'] = not nattlys['slumber-mode']
+    slumber_mode = nattlys['slumber-mode']
+
+    url = format_url('Nattlys')
+    data = {'slumber-mode': slumber_mode}
+    data = json.dumps(data)
+    response = http.patch(url=url, data=data)
+    print(response.status_code)
+    response.close()
+
+
+#####   Wakey-Time #####
+
+def sleep_in(slumber_length: int = 30):
+    wakey_time = nattlys['wakey-time']
+
+    hour = int(wakey_time.split(':')[0])
+    minute = int(wakey_time.split(':')[1])
+    hour += slumber_length // 60
+    minute += slumber_length % 60
+
+    shr = f'0{hour}' if hour < 10 else f'{hour}'
+    smin = f'0{minute}' if minute < 10 else f'{minute}'
+
+    return f'{shr}:{smin}'
+
+
+def get_wakey_time():
+    try:
+        wakey_url = format_url('Nattlys/wakey-time')
+        response = http.get(wakey_url)
+        wakey_data = response.json()
+        response.close()
+
+        hour = wakey_data['HR']
+        minute = wakey_data['MIN']
+        shr = f'0{hour}' if hour < 10 else f'{hour}'
+        smin = f'0{minute}' if minute < 10 else f'{minute}'
+
+        nattlys['wakey-time'] = f'{shr}:{smin}'
+    except Exception as ex:
+        print(f'{ex}\nUsing default settings')
+
+
+def set_wakey_time(new_time: str):
+    nattlys['wakey-time'] = new_time
+
     hour = new_time.split(':')[0]
     minute = new_time.split(':')[1]
+    data = {'HR': int(hour), 'MIN': int(minute)}
+    data = json.dumps(data)
 
-    realtime_db.patch('/Nattlys/default-time/sleepy-time', ({'HR': hour}, {'MIN': minute}))
+    wakey_url = format_url('Nattlys/wakey-time')
+    response = http.patch(url=wakey_url, data=data)
+    print(response.status_code)
+    response.close()
 
-    time_settings['sleepy-time'] = new_time
 
-    print(f'Sleepy-time has been updated to {new_time}')
-
-
-# Compare the current time with sleepy-time and wakey-time to see if it is time to get up
-def is_wakeytime():
-    slumber_mode = get_slumber_mode()
-    wakey_time = sleep_in if slumber_mode else get_wakeytime()
-    sleepy_time = get_sleepytime()
+def is_wakey_time():
+    wakey_time = sleep_in() if is_slumber_mode() else nattlys['wakey-time']
+    sleepy_time = nattlys['sleepy-time']
     current_time = mu_time.now()
 
     after_wakeup = wakey_time <= current_time
@@ -121,28 +164,28 @@ def is_wakeytime():
     return after_wakeup and before_bedtime
 
 
-# Update the lights so that the appropriate eyes are lit 
-def update_lights():
+#####   Controll the lights #####
 
-    eyes.green_on_yellow_off() if is_wakeytime() else eyes.yellow_on_green_off()
+def update_lights():
+    eyes.green_on_yellow_off() if is_wakey_time() else eyes.yellow_on_green_off()
 
     print(f"""
     -------------------------------------
             Wakey-Time Nightlight
     -------------------------------------
 
-        The current time is:    {mu_time.now}
-        Sleepy-Time is set to:  {get_sleepytime()}
-        Wakey-Time is set to:   {get_wakeytime()}
+        The current time is:    {mu_time.now()}
+        Sleepy-Time is set to:  {nattlys['sleepy-time']}
+        Wakey-Time is set to:   {nattlys['wakey-time']}
+        Slumber-Mode is:        {'ON' if is_slumber_mode() else 'OFF'}
 
     -------------------------------------
 
-        {'It is okay to get up now' if is_wakeytime() else 'You should be in bed'}
+        {'It is okay to get up now' if is_wakey_time() else 'You should be in bed'}
 
     """)
 
 
-# Light show
 def dance_party():
     print('\n\n\t\tDANCE PARTY!!!\n\n')
     eyes.green_eyes.check()
