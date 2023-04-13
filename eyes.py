@@ -1,27 +1,30 @@
-from machine import Pin
+import board
 import time
+from digitalio import DigitalInOut, Direction
+
 
 class Eyes():
-    def __init__(self, left_pin: int, right_pin: int, color: str):
-        self.left_eye = Pin(left_pin, Pin.OUT)
-        self.right_eye = Pin(right_pin, Pin.OUT)
-        self.eye_color = color
+    def __init__(self, left_pin, right_pin, color):
+        self.left_eye = DigitalInOut(left_pin)
+        self.left_eye.direction = Direction.OUTPUT
 
-    def __repr__(self):
-        return f'These eyes are {self.eye_color}.'
-    
+        self.right_eye = DigitalInOut(right_pin)
+        self.right_eye.direction = Direction.OUTPUT
+
+        self.color = color
+
     def lights_on(self):
-        self.left_eye.on()
-        self.right_eye.on()
+        self.left_eye.value = True
+        self.right_eye.value = True
 
     def lights_out(self):
-        self.left_eye.off()
-        self.right_eye.off()
+        self.left_eye.value = False
+        self.right_eye.value = False
 
     def wink(self, eye):
-        eye.off()
+        eye.value = False
         time.sleep(1)
-        eye.on()
+        eye.value = True
 
     def flash(self):
         for i in range(3):
@@ -31,18 +34,18 @@ class Eyes():
             time.sleep(0.05)
 
     def check(self):
-        self.left_eye.on()
-        time.sleep_ms(50)
-        self.right_eye.on()
-        time.sleep_ms(50)
+        self.left_eye.value = True
+        time.sleep(0.05)
+        self.right_eye.value = True
+        time.sleep(0.05)
         self.wink(self.left_eye)
-        time.sleep_ms(50)
+        time.sleep(0.05)
         self.wink(self.right_eye)
-        time.sleep_ms(50)
+        time.sleep(0.05)
         self.flash()
-    
-green_eyes = Eyes(33, 32, 'green')
-yellow_eyes = Eyes(5, 18, 'yellow')
+
+green_eyes = Eyes(board.D33, board.D32, 'green')
+yellow_eyes = Eyes(board.D5, board.D18, 'yellow')
 
 def green_on_yellow_off():
     green_eyes.lights_on()
