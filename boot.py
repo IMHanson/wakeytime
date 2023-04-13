@@ -1,30 +1,50 @@
-# This is script that run when device boot up or wake from sleep.
-import ntptime
-import network
-import env_vars
-from firebase_realtime import Auth
-import eyes
+import os
+import wifi
+import ntp
+import socketpool
+import rtc
+import mu_time
 
-#####   Initialize Wifi  & set time #####
 
-wifi = network.WLAN(network.STA_IF)
+#   Environment Variables
+SSID = os.getenv('CIRCUITPY_WIFI_SSID')
+WIFI_PASSWORD = os.getenv('CIRCUITPY_WIFI_PASSWORD')
 
-if not wifi.isconnected():
 
-    print('connecting to network...')
-    wifi.active(True)
-    wifi.connect(env_vars.WIFI_SSID, env_vars.WIFI_PASSWORD)
+#   Connect to WiFi
+try:
+    wifi.radio.connect(ssid=SSID, password=WIFI_PASSWORD)
+except ConnectionError:
+    pass
 
-    while not wifi.isconnected():
-        eyes.green_eyes.flash()
-        eyes.yellow_eyes.flash()
+while wifi.radio.ipv4_address == None:
+    access_points = {}
+    print('Looking for network')
 
-print('network config:', wifi.ifconfig())
-eyes.eye_check()
+    for network in wifi.radio.start_scanning_networks(start_channel=1, stop_channel=13):
+        access_points[network.ssid] = {
+            'ssid': network.ssid, 'channel': network.channel}
+    wifi.radio.stop_scanning_networks()
 
-ntptime.settime()
+    for ap in access_points.values():
+        if wifi.radio.ipv4_address == None:
+            ssid = ap['ssid']
+            channel = ap['channel']
+            try:
+                print('Trying to connect to {0}'.format(ssid))
+                wifi.radio.connect(
+                    ssid=ssid, password=WIFI_PASSWORD, channel=channel)
+            except ConnectionError as connection_error:
+                print(f'Connection failed: {connection_error}')
 
-#####   Initialize Firebase #####
+print(f'Connection established. IP-address: {wifi.radio.ipv4_address}')
 
-auth = Auth()
-flg, headers = auth.validate_user(env_vars.EMAIL, env_vars.EMAIL_PASSSWORD, env_vars.API_KEY)
+
+#   Establish websocket and set time
+
+pool = socketpool.SocketPool(wifi.radio)
+ntp_time = ntp.NTP(pool)
+
+rtc.set_time_source(ntp_time)
+
+print(f'Current time: {mu_time.now()}')
